@@ -279,9 +279,10 @@ export default {
     },
     editBlur (event, row, col) {
       console.log('blur', row, col)
-      if (this.editRow === row && this.editCol === col) {
-        this.editRow = this.editCol = undefined
-      }
+      // BUG: commented out because it bugs out in chrome
+      // if (this.editRow === row && this.editCol === col) {
+      //   this.editRow = this.editCol = undefined
+      // }
     },
     editKeyDown (event, row, col) {
       switch (event.key) {
