@@ -1,5 +1,6 @@
 <template>
-  <div class="dg-container" :style="styleSize(this.width, this.height)" ref="dgContainer">
+  <div class="dg-container" :style="styleSize(this.width, this.height)" ref="dgContainer"
+  @wheel="mouseWheel">
     <div class="dg-topcontainer"
     :style="topContainerPosition">
       <div class="dg-columnheadercontainer" ref="columnHeaderContainer"
@@ -319,6 +320,14 @@ export default {
           }
           break
       }
+    },
+    mouseWheel (event) {
+      let dx = event.shiftKey ? event.deltaY : event.deltaX
+      let dy = event.shiftKey ? event.deltaX : event.deltaY
+      dx = Math.max(-this.scrollX, Math.min(this.columnLefts[this.displayColumns.length] - this.scrollPaneWidth - this.scrollX, dx))
+      dy = Math.max(-this.scrollY, Math.min(this.estTableLength * this.rowHeight - this.scrollPaneHeight - this.scrollY, dy))
+      this.setScrollX(this.scrollX + dx)
+      this.setScrollY(this.scrollY + dy)
     }
   },
   // Livecycle EVENTS
