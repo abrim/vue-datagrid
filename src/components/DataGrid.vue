@@ -1,78 +1,90 @@
 <template>
   <div class="dg-container" :style="styleSize(this.width, this.height)" ref="dgContainer"
   @wheel="mouseWheel">
-    <div class="dg-topcontainer"
-    :style="topContainerPosition">
-      <div class="dg-columnheadercontainer" ref="columnHeaderContainer"
-      :style="columnHeaderContainerPosition">
-        <div class="dg-columnheader"
-        v-for="(c,i) in displayColumns" :key="i"
-        v-if="columnLefts[i + 1] > scrollX && columnLefts[i] - scrollX < scrollPaneWidth"
-        :style="stylePosition(columnLefts[i] - scrollX, 0, displayColumns[i].width, prefs.columnHeaderHeight)">
-          <component :is="rowHeaderComponent"
-          :height="prefs.columnHeaderHeight"
-          :width="displayColumns[i].width"
-          :value="c.title" />
-        </div>
-      </div>
+    <div class="dg-vertical_container"
+    :style="{height: topOuterHeight + 'px'}"
+    v-if="topOuterHeight > 0">
     </div>
-    <div class="dg-leftcontainer"
-    :style="leftContainerPosition">
-      <div class="dg-rowheadercontainer"
-      :style="rowHeaderContainerPosition">
-        <div class="dg-rowheader"
-        v-for="r in visibleRows" :key="r"
-        v-if="startDisplayRow + r <= actTableLength"
-        :style="stylePosition(0, (r - 1) * rowHeight - rowOffset, leftWidth, rowHeight)">
-          <component :is="rowHeaderComponent"
-          :height="rowHeight"
-          :width="leftWidth"
-          :value="r + startDisplayRow" />
+    <div class="dg-vertical_container"
+    :style="{height: innerHeight + 'px'}">
+      <div class="dg-horizontal_container"
+      :style="{width: leftOuterWidth + 'px'}"
+      v-if="leftOuterWidth > 0">
+    </div><div class="dg-horizontal_container"
+      :style="{width: innerWidth + 'px'}">
+        <div class="dg-vertical_container"
+        :style="{height: topInnerHeight + 'px'}">
+          <div class="dg-horizontal_container"
+          :style="{width: leftInnerWidth + 'px'}">
+          </div><div class="dg-horizontal_container"
+          :style="{width: scrollPaneWidth + 'px'}">
+            <div class="dg-columnheadercontainer" ref="columnHeaderContainer"
+            :style="columnHeaderContainerPosition">
+              <div class="dg-columnheader"
+              v-for="(c,i) in displayColumns" :key="i"
+              v-if="columnLefts[i + 1] > scrollX && columnLefts[i] - scrollX < scrollPaneWidth"
+              :style="stylePosition(columnLefts[i] - scrollX, 0, displayColumns[i].width, prefs.columnHeaderHeight)">
+                <component :is="rowHeaderComponent"
+                :height="prefs.columnHeaderHeight"
+                :width="displayColumns[i].width"
+                :value="c.title" />
+              </div>
+            </div>
+          </div><div class="dg-horizontal_container"
+          :style="{width: rightInnerWidth + 'px'}">
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="dg-scrollpane" ref="scrollPane"
-    :style="scrollpanePosition">
-      <div class="dg-row"
-      v-for="r in visibleRows" :key="r + startDisplayRow"
-      :style="stylePosition(-scrollX, (r - 1) * rowHeight - rowOffset, columnLefts[displayColumns.length], rowHeight)"
-      v-if="startDisplayRow + r <= actTableLength">
-        <div class="dg-cell"
-        v-for="(c, i) in displayColumns" :key="(r + startDisplayRow) + '-' + i"
-        v-if="columnLefts[i + 1] > scrollX && columnLefts[i] - scrollX < scrollPaneWidth"
-        :style="stylePosition(columnLefts[i], 0, displayColumns[i].width, rowHeight)"
-         >
-          <component :is="displayColumns[i].component"
-          v-if="editRow !== startDisplayRow + r - 1 || editCol !== i"
-          :width="displayColumns[i].width"
-          :height="rowHeight"
-          :value="displayColumns[i].value(tableData[startDisplayRow + r - 1])"
-          @click.native="cellClick($event, startDisplayRow + r - 1, i)" />
+        <div class="dg-vertical_container"
+        :style="{height: scrollPaneHeight + 'px'}">
+          <div class="dg-horizontal_container"
+          :style="{width: leftInnerWidth + 'px'}">
+            <div class="dg-rowheadercontainer"
+            :style="rowHeaderContainerPosition">
+              <div class="dg-rowheader"
+              v-for="r in visibleRows" :key="r"
+              v-if="startDisplayRow + r <= actTableLength"
+              :style="stylePosition(0, (r - 1) * rowHeight - rowOffset, leftInnerWidth, rowHeight)">
+                <component :is="rowHeaderComponent"
+                :height="rowHeight"
+                :width="leftInnerWidth"
+                :value="r + startDisplayRow" />
+              </div>
+            </div>
+          </div><div class="dg-horizontal_container" ref="scrollPane"
+          :style="{width: scrollPaneWidth + 'px'}">
+            <div class="dg-row"
+            v-for="r in visibleRows" :key="r + startDisplayRow"
+            :style="stylePosition(-scrollX, (r - 1) * rowHeight - rowOffset, columnLefts[displayColumns.length], rowHeight)"
+            v-if="startDisplayRow + r <= actTableLength">
+              <div class="dg-cell"
+              v-for="(c, i) in displayColumns" :key="(r + startDisplayRow) + '-' + i"
+              v-if="columnLefts[i + 1] > scrollX && columnLefts[i] - scrollX < scrollPaneWidth"
+              :style="stylePosition(columnLefts[i], 0, displayColumns[i].width, rowHeight)" >
+                <component :is="displayColumns[i].component"
+                v-if="editRow !== startDisplayRow + r - 1 || editCol !== i"
+                :width="displayColumns[i].width"
+                :height="rowHeight"
+                :value="displayColumns[i].value(tableData[startDisplayRow + r - 1])"
+                @click.native="cellClick($event, startDisplayRow + r - 1, i)" />
 
-          <component :is="displayColumns[i].editComponent"
-          v-else
-          :width="displayColumns[i].width"
-          :height="rowHeight"
-          :value="displayColumns[i].value(tableData[startDisplayRow + r - 1])"
-          @blur.native="editBlur($event, startDisplayRow + r - 1, i)"
-          @keydown="editKeyDown($event, startDisplayRow + r - 1, i)"/>
+                <component :is="displayColumns[i].editComponent"
+                v-else
+                :width="displayColumns[i].width"
+                :height="rowHeight"
+                :value="displayColumns[i].value(tableData[startDisplayRow + r - 1])"
+                @blur.native="editBlur($event, startDisplayRow + r - 1, i)"
+                @keydown="editKeyDown($event, startDisplayRow + r - 1, i)"/>
+              </div>
+            </div>
+          </div><div class="dg-horizontal_container"
+          :style="{width: rightInnerWidth + 'px'}"
+          v-if="rightInnerWidth > 0">
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="dg-rightcontainer"
-    :style="rightContainerPosition">
-      <div class="dg-verticalscroll" ref="verticalScroll"
-      :style="{width: scrollbarWidth + 'px'}"
-      @scroll="scrollpaneScrollY($event)">
-        <div class="dg-endmarker"
-        :style="stylePosition(0, estTableLength * rowHeight - 1, 1, 1)">
+        <div class="dg-vertical_container"
+        :style="{height: bottomInnerHeight + 'px'}"
+        v-if="bottomInnerHeight > 0">
         </div>
-      </div>
-    </div>
-    <div class="dg-bottomcontainer"
-    :style="bottomContainerPosition">
-      <div class="dg-footercontainer"
-      :style="footerContainerPosition">
         <div class="dg-horizontalscroll" ref="horizontalScroll"
         :style="{height: scrollbarHeight + 'px'}"
         @scroll="scrollpaneScrollX($event)">
@@ -80,7 +92,21 @@
           :style="stylePosition(columnLefts[displayColumns.length] - 1, 0, 1, 1)">
           </div>
         </div>
+      </div><div class="dg-verticalscroll" ref="verticalScroll"
+      :style="{width: scrollbarWidth + 'px', height: (innerHeight - scrollbarHeight) + 'px'}"
+      @scroll="scrollpaneScrollY($event)"
+      v-if="scrollbarWidth > 0">
+        <div class="dg-endmarker"
+        :style="stylePosition(0, estTableLength * rowHeight - 1, 1, 1)">
+        </div>
+      </div><div class="dg-horizontal_container"
+      :style="{width: rightOuterWidth + 'px'}"
+      v-if="rightOuterWidth > 0">
       </div>
+    </div>
+    <div class="dg-vertical_container"
+    :style="{height: bottomOuterHeight + 'px'}"
+    v-if="bottomOuterHeight > 0">
     </div>
 
   </div>
@@ -111,10 +137,14 @@ export default {
       scrollbarWidth: 20,
       scrollbarHeight: 20,
       displayColumns: [],
-      topHeight: 0, // top section height
-      leftWidth: 80, // left section width
-      rightWidth: 20, // right section width
-      bottomHeight: 20, // bottom section height
+      topInnerHeight: 0,
+      topOuterHeight: 0,
+      leftInnerWidth: 60,
+      leftOuterWidth: 0,
+      rightInnerWidth: 0,
+      rightOuterWidth: 0,
+      bottomInnerHeight: 0,
+      bottomOuterHeight: 0,
       rowHeight: 40, // row height
       scrollX: 0,
       scrollY: 0,
@@ -146,29 +176,17 @@ export default {
     }
   },
   computed: {
-    scrollpanePosition () {
-      return stylePosition(this.leftWidth, this.topHeight, this.scrollPaneWidth, this.scrollPaneHeight)
+    innerHeight () {
+      return this.height - this.topOuterHeight - this.bottomOuterHeight
     },
-    topContainerPosition () {
-      return stylePosition(0, 0, this.width, this.topHeight)
-    },
-    leftContainerPosition () {
-      return stylePosition(0, this.topHeight, this.leftWidth, this.scrollPaneHeight)
-    },
-    rightContainerPosition () {
-      return stylePosition(this.width - this.rightWidth, this.topHeight, this.rightWidth, this.scrollPaneHeight)
-    },
-    bottomContainerPosition () {
-      return stylePosition(0, this.height - this.bottomHeight, this.width, this.bottomHeight)
+    innerWidth () {
+      return this.width - this.leftOuterWidth - this.rightOuterWidth - this.scrollbarWidth
     },
     columnHeaderContainerPosition () {
-      return stylePosition(this.leftWidth, 0, this.scrollPaneWidth, this.topHeight)
+      return stylePosition(0, 0, this.scrollPaneWidth, this.topInnerHeight)
     },
     rowHeaderContainerPosition () {
-      return stylePosition(0, 0, this.leftWidth, this.scrollPaneHeight)
-    },
-    footerContainerPosition () {
-      return stylePosition(this.leftWidth, 0, this.scrollPaneWidth, this.bottomHeight)
+      return stylePosition(0, 0, this.leftInnerWidth, this.scrollPaneHeight)
     },
     columnLefts () {
       let r = []
@@ -181,7 +199,7 @@ export default {
       return r
     },
     visibleRows () {
-      return Math.floor((this.height - this.topHeight - this.bottomHeight) / this.rowHeight) + 1
+      return Math.ceil(this.scrollPaneHeight / this.rowHeight) + 1
     },
     startDisplayRow () {
       return Math.floor(this.scrollY / this.rowHeight)
@@ -190,10 +208,10 @@ export default {
       return this.scrollY % this.rowHeight
     },
     scrollPaneWidth () {
-      return this.width - this.leftWidth - this.rightWidth
+      return this.width - this.leftInnerWidth - this.leftOuterWidth - this.rightInnerWidth - this.rightOuterWidth - this.scrollbarWidth
     },
     scrollPaneHeight () {
-      return this.height - this.topHeight - this.bottomHeight
+      return this.height - this.topInnerHeight - this.topOuterHeight - this.bottomInnerHeight - this.bottomOuterHeight - this.scrollbarHeight
     }
   },
   methods: {
@@ -333,7 +351,7 @@ export default {
   // Livecycle EVENTS
   created () {
     this.columnHeaderHeight = this.prefs.columnHeaderHeight
-    this.topHeight = this.columnHeaderHeight
+    this.topInnerHeight = this.columnHeaderHeight
     this.rowHeaderComponent = this.prefs.rowHeaderComponent || DGTextCell
     this.columnHeaderComponent = this.prefs.columnHeaderComponent || DGTextCell
     let dc = []
@@ -352,15 +370,11 @@ export default {
   updated () {
     this.scrollbarHeight = this.$refs.horizontalScroll.offsetHeight - this.$refs.horizontalScroll.clientHeight
     this.scrollbarWidth = this.$refs.verticalScroll.offsetWidth - this.$refs.verticalScroll.clientWidth
-    this.bottomHeight = this.scrollbarHeight
-    this.rightWidth = this.scrollbarWidth
   },
   mounted () {
     this.readPage(this.startDisplayRow)
     this.scrollbarHeight = this.$refs.horizontalScroll.offsetHeight - this.$refs.horizontalScroll.clientHeight
     this.scrollbarWidth = this.$refs.verticalScroll.offsetWidth - this.$refs.verticalScroll.clientWidth
-    this.bottomHeight = this.scrollbarHeight
-    this.rightWidth = this.scrollbarWidth
   }
 }
 </script>
@@ -374,27 +388,38 @@ div {
   position: relative;
 }
 
+.dg-vertical_container {
+  position: relative;
+  overflow: hidden;
+}
+
+.dg-horizontal_container {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: inline-block;
+}
+
+.dg-verticalscroll {
+  overflow-y: auto;
+  height: 100%;
+  position: relative;
+  /* max-width: 20px; */
+  overflow-x: hidden;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.dg-horizontalscroll {
+  overflow-x: auto;
+  width: 100%;
+  position: relative;
+  /* min-height: 4px;
+  max-height: 20px; */
+  overflow-y: hidden;
+}
+
 .dg-scrollpane {
-  position: absolute;
-  overflow: hidden;
-}
-
-.dg-topcontainer {
-  position: absolute;
-  overflow: hidden;
-}
-
-.dg-leftcontainer {
-  position: absolute;
-  overflow: hidden;
-}
-
-.dg-rightcontainer {
-  position: absolute;
-  overflow: hidden;
-}
-
-.dg-bottomcontainer {
   position: absolute;
   overflow: hidden;
 }
@@ -438,26 +463,5 @@ div {
   position: absolute;
   border-right: 1px solid darkgray;
   border-bottom: 1px solid darkgray;
-}
-
-.dg-footercontainer {
-  position: absolute;
-}
-
-.dg-horizontalscroll {
-  overflow-x: auto;
-  width: 100%;
-  position: absolute;
-  min-height: 4px;
-  max-height: 20px;
-  overflow-y: hidden;
-}
-
-.dg-verticalscroll {
-  overflow-y: auto;
-  height: 100%;
-  position: absolute;
-  max-width: 20px;
-  overflow-x: hidden;
 }
 </style>
