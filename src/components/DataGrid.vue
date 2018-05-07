@@ -1,6 +1,8 @@
 <template>
   <div class="dg-container" :style="styleSize(this.width, this.height)" ref="dgContainer"
-  @wheel="mouseWheel">
+  @wheel="mouseWheel"
+  @pointermove="moveColumnResize($event)"
+  @pointerup="upColumnResize($event)" >
     <div class="dg-vertical_container"
     :style="{height: topOuterHeight + 'px'}"
     v-if="topOuterHeight > 0">
@@ -28,6 +30,12 @@
                 :height="actPrefs.header.column.height"
                 :width="displayColumns[i].width"
                 :value="c.title" />
+              </div>
+              <div class="dg-columnheader-resize"
+              v-for="(c,i) in displayColumns" :key="'r'+i"
+              v-if="columnLefts[i + 1] > scrollX && columnLefts[i] - scrollX < scrollPaneWidth"
+              :style="stylePosition(columnLefts[i+1] - scrollX - 3, 0, 5, actPrefs.header.column.height)"
+              @pointerdown="downColumnResize($event, i)" >
               </div>
             </div>
           </div><div class="dg-horizontal_container"
@@ -119,6 +127,9 @@
 import DGTextCell from './DGTextCell'
 import DGTextEditor from './DGTextEditor'
 
+let internal = {
+  waitForFrame: true
+}
 /**
  * Simple object check.
  * @param item
@@ -162,6 +173,16 @@ function stylePosition (left, top, wid, hgt) {
     left: left + 'px',
     top: top + 'px',
     ...styleSize(wid, hgt)
+  }
+}
+
+function onAnimation (fun) {
+  if (internal.waitForFrame) {
+    window.requestAnimationFrame(function () {
+      fun()
+      internal.waitForFrame = true
+    })
+    internal.waitForFrame = false
   }
 }
 
@@ -220,7 +241,12 @@ export default {
       editRow: undefined,
       editCol: undefined,
       editVal: undefined,
-      editDirty: false
+      editDirty: false,
+
+      resizeColumn: undefined,
+      resizingColumn: false,
+      resizeColumnX: 0,
+      resizeColumnWidth: 0
     }
   },
   props: {
@@ -431,6 +457,41 @@ export default {
       dy = Math.max(-this.scrollY, Math.min(this.estTableLength * this.actPrefs.rowHeight - this.scrollPaneHeight - this.scrollY, dy))
       this.setScrollX(this.scrollX + dx)
       this.setScrollY(this.scrollY + dy)
+    },
+    downColumnResize (event, col) {
+      console.log('down')
+      console.log(event)
+      if (event.isPrimary) {
+        if (event.pointerType !== 'mouse' || (event.pointerType === 'mouse' && (event.buttons || 1))) {
+          event.preventDefault()
+          this.$refs.dgContainer.setPointerCapture(event.pointerId)
+          this.resizeColumn = col
+          this.resizingColumn = true
+          this.resizeColumnX = event.clientX
+          this.resizeColumnWidth = this.displayColumns[col].width
+        }
+      }
+    },
+    upColumnResize (event, col) {
+      console.log('up')
+      console.log(event)
+      if (event.isPrimary) {
+        if (event.pointerType !== 'mouse' || (event.pointerType === 'mouse' && (event.buttons || 1))) {
+          event.preventDefault()
+          this.resizingColumn = false
+          this.$refs.dgContainer.releasePointerCapture(event.pointerId)
+        }
+      }
+    },
+    moveColumnResize (event, col) {
+      if (this.resizingColumn) {
+        let self = this
+        console.log(event)
+        event.preventDefault()
+        let wid = event.clientX - this.resizeColumnX + this.resizeColumnWidth
+        if (wid < 0) { wid = 0 }
+        onAnimation(function () { self.displayColumns[self.resizeColumn].width = wid })
+      }
     }
   },
   // Livecycle EVENTS
@@ -581,5 +642,10 @@ div {
   position: absolute;
   border-right: 1px solid darkgray;
   border-bottom: 1px solid darkgray;
+}
+
+.dg-columnheader-resize {
+  position: absolute;
+  cursor: col-resize;
 }
 </style>
