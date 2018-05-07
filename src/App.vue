@@ -13,9 +13,8 @@ export default {
   data () {
     return {
       prefs: {
-        columnHeaderHeight: 40,
-        rowHeaderComponent: DGTextCell,
-        columnHeaderComponent: DGTextCell,
+        rowHeight: 30,
+
         readPageSize: 32, // number of rows to read at a time
         readRows: function (start, size) {
           return new Promise(function (resolve) {
@@ -44,7 +43,8 @@ export default {
         r.push({
           title: 'Column ' + i,
           width: 80,
-          value: row => (row || {})['col' + i],
+          getValue: row => (row || {})['col' + i],
+          setValue: function (row, v) { (row || {})['col' + i] = v; return row },
           component: DGTextCell
         })
       }
