@@ -51,7 +51,8 @@
               </div>
             </div>
           </div><div class="dg-horizontal_container" ref="scrollPane"
-          :style="{width: scrollPaneWidth + 'px'}">
+          :style="{width: scrollPaneWidth + 'px'}"
+          @focusout="containerFocusOut">
             <div class="dg-row"
             v-for="r in visibleRows" :key="r + startDisplayRow"
             :style="stylePosition(-scrollX, (r - 1) * actPrefs.rowHeight - rowOffset, columnLefts[displayColumns.length], actPrefs.rowHeight)"
@@ -71,8 +72,11 @@
                 v-else
                 :width="displayColumns[i].width"
                 :height="actPrefs.rowHeight"
+                v-model="editVal"
+                @input="editInput"
                 @blur.native="editBlur($event, startDisplayRow + r - 1, i)"
-                @keydown="editKeyDown($event, startDisplayRow + r - 1, i)"/>
+                @focusout.native="focusOut($event, startDisplayRow + r - 1, i)"
+                @keydown="editKeyDown($event, startDisplayRow + r - 1, i)" />
               </div>
             </div>
           </div><div class="dg-horizontal_container"
@@ -201,7 +205,7 @@ export default {
       displayColumns: [],
       topInnerHeight: 0,
       topOuterHeight: 0,
-      leftInnerWidth: 60,
+      leftInnerWidth: 10,
       leftOuterWidth: 0,
       rightInnerWidth: 0,
       rightOuterWidth: 0,
@@ -214,7 +218,9 @@ export default {
       actTableLength: Number.MAX_SAFE_INTEGER,
 
       editRow: undefined,
-      editCol: undefined
+      editCol: undefined,
+      editVal: undefined,
+      editDirty: false
     }
   },
   props: {
@@ -323,10 +329,24 @@ export default {
       this.scrollX = x
       this.$refs.horizontalScroll.scrollLeft = x
     },
+    editInput (v) {
+      this.editDirty = true
+    },
+    saveEdit () {
+      console.log('save', this.editRow, this.editCol, this.editVal, this.editDirty)
+      if (this.editDirty) {
+        let r = this.displayColumns[this.editCol].setValue(this.tableData[this.editRow], this.editVal)
+        this.$set(this.tableData, this.editRow, r)
+        this.editDirty = false
+      }
+    },
     editCell (row, col) {
+      this.saveEdit()
       if (row >= 0 && row < this.estTableLength && col >= 0 && col < this.displayColumns.length) {
         this.editRow = row
         this.editCol = col
+        this.editVal = this.displayColumns[col].getValue(this.tableData[row])
+        console.log('edit', this.editRow, this.editCol, this.editVal, this.editDirty)
         if (row <= this.startDisplayRow) {
           this.setScrollY(row * this.actPrefs.rowHeight)
         } else if ((row + 1) * this.actPrefs.rowHeight > this.scrollY + this.scrollPaneHeight) {
@@ -354,11 +374,18 @@ export default {
       this.editCell(row, col)
     },
     editBlur (event, row, col) {
-      console.log('blur', row, col)
+      console.log('blur', row, col, this.editRow, this.editCol)
+      this.saveEdit()
       // BUG: commented out because it bugs out in chrome
       // if (this.editRow === row && this.editCol === col) {
       //   this.editRow = this.editCol = undefined
       // }
+    },
+    focusOut (event, row, col) {
+      console.log('focusout', row, col, this.editRow, this.editCol)
+    },
+    containerFocusOut (event) {
+      console.log('container focus out')
     },
     editKeyDown (event, row, col) {
       switch (event.key) {
@@ -395,6 +422,7 @@ export default {
           }
           break
       }
+      return false
     },
     mouseWheel (event) {
       let dx = event.shiftKey ? event.deltaY : event.deltaX
@@ -424,6 +452,8 @@ export default {
       },
       ap
     )
+    console.log('prefs: ', this.actPrefs)
+
     this.topInnerHeight = this.actPrefs.header.column.height
     this.leftInnerWidth = this.actPrefs.header.row.width
     let dc = []

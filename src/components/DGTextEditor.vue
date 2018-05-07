@@ -1,14 +1,16 @@
 <template>
   <input type="text" autofocus class="dg-texteditor"
   :style="{width: width+'px', height: height+'px'}"
+  :value="value"
   ref="editor"
+  @input="textInput"
   @keydown="keyDown($event)"
   @focus="selectText" />
 </template>
 
 <script>
 export default {
-  props: ['width', 'height'],
+  props: ['width', 'height', 'value'],
   methods: {
     keyDown (event) {
       if (['ArrowUp', 'ArrowDown', 'Tab', 'Enter', 'PageUp', 'PageDown'].includes(event.key)) {
@@ -19,13 +21,15 @@ export default {
     selectText (event) {
       console.log('select')
       // event.target.select()
+    },
+    textInput () {
+      this.$emit('input', this.$refs.editor.value)
     }
   },
   updated () {
     console.log('updated')
   },
   mounted () {
-    console.log('mounted')
     this.$refs.editor.focus()
     this.$refs.editor.select()
   }
