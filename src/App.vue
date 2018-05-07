@@ -43,8 +43,22 @@ export default {
         r.push({
           title: 'Column ' + i,
           width: 80,
-          getValue: row => (row || {})['col' + i],
-          setValue: function (row, v) { (row || {})['col' + i] = v; return row },
+          key: 'col' + i,
+          // getValue: row => (row || {})['col' + i],
+          // setValue: function (row, v) {
+          //   let r = (row || {})
+          //   let ov = r['col' + i]
+          //   if (ov !== v) {
+          //     r.$dg = (r.$dg || {})
+          //     r.$dg.old = (r.$dg.old || {})
+          //     if (r.$dg.old['col' + i] === undefined) {
+          //       r.$dg.old['col' + i] = ov
+          //       r.$dg.dirty = true
+          //     }
+          //   }
+          //   r['col' + i] = v
+          //   return row
+          // },
           component: DGTextCell
         })
       }

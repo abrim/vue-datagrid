@@ -464,6 +464,25 @@ export default {
           editComponent: DGTextEditor,
           ...this.columns[i]
         }
+        if (c.getValue === undefined) {
+          c.getValue = function (row) { return (row || {})[c.key] }
+        }
+        if (c.setValue === undefined) {
+          c.setValue = function (row, v) {
+            let r = (row || {})
+            let ov = r[c.key]
+            if (ov !== v) {
+              r.$dg = (r.$dg || {})
+              r.$dg.old = (r.$dg.old || {})
+              if (r.$dg.old[c.key] === undefined) {
+                r.$dg.old[c.key] = ov
+                r.$dg.dirty = true
+              }
+            }
+            r[c.key] = v
+            return row
+          }
+        }
         dc.push(c)
       }
     }
